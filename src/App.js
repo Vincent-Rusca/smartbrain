@@ -12,7 +12,7 @@ import Particles from 'react-particles-js';
 const particlesOptions = {
   particles: {
     number: {
-      value: 45
+      value: 30
     },
     line_linked: {
       color: '#FFF',
@@ -32,7 +32,7 @@ const particlesOptions = {
 const initialState = {
   input: '',
   imageUrl: '',
-  box: {},
+  boxes: [],
   route: 'signin',
   isSignedIn: false,
   user: {
@@ -66,17 +66,24 @@ class App extends Component {
     }})
   }
 
-  calculateFaceLocation = (data) => {
-    const clarifaiFaceData = data.outputs[0].data.regions[0].region_info.bounding_box;
+  calculateFaceLocations = (data) => {
     const image = document.getElementById('inputImage');
     const width = Number(image.width);
     const height = Number(image.height);
-    return {
-      leftCol: clarifaiFaceData.left_col * width,
-      topRow: clarifaiFaceData.top_row * height,
-      rightCol: width - (clarifaiFaceData.right_col * width),
-      bottomRow: height - (clarifaiFaceData.bottom_row * height)
-    }
+    let faceBoxArray = [];
+    data.outputs[0].data.regions.forEach(element => {
+      let clarifaiRawFaceData = element.region_info.bounding_box;
+      //console.log(clarifaiRawFaceData)
+      faceBoxArray.push({
+        leftCol: clarifaiRawFaceData.left_col * width,
+        topRow: clarifaiRawFaceData.top_row * height,
+        rightCol: width - (clarifaiRawFaceData.right_col * width),
+        bottomRow: height - (clarifaiRawFaceData.bottom_row * height)
+      })
+    });
+    //const clarifaiFaceData = data.outputs[0].data.regions[0].region_info.bounding_box;
+    
+    return faceBoxArray;
   }
 
   onRouteChange = (route) => {
@@ -88,9 +95,9 @@ class App extends Component {
     this.setState({route: route});
   }
 
-  displayFaceBox = (box) => {
-    console.log(box);
-    this.setState({box: box});
+  displayFaceBoxes = (boxes) => {
+    //console.log(box);
+    this.setState({boxes: boxes});
   }
 
   onInputChange = e => {
@@ -123,7 +130,7 @@ class App extends Component {
       })
       .catch(console.log);
       console.log('Request successful!');
-      this.displayFaceBox(this.calculateFaceLocation(response));
+      this.displayFaceBoxes(this.calculateFaceLocations(response));
     }, error => {
       console.log('ERROR: ' + error);
     });
@@ -137,7 +144,7 @@ class App extends Component {
             <Logo />
             <Rank name={this.state.user.name} entries={this.state.user.entries} />
             <ImageLinkForm onInputChange={this.onInputChange} onPictureSubmit={this.onPictureSubmit} />
-            <FaceRecognition box={this.state.box} imageUrl={this.state.imageUrl} />
+            <FaceRecognition boxes={this.state.boxes} imageUrl={this.state.imageUrl} />
           </div>
         )
       case 'signin':
