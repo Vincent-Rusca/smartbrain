@@ -12,7 +12,7 @@ import Particles from 'react-particles-js';
 const particlesOptions = {
   particles: {
     number: {
-      value: 120
+      value: 45
     },
     line_linked: {
       color: '#FFF',
